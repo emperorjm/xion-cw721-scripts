@@ -1,0 +1,36 @@
+{
+  "name": "xion-nft-scripts",
+  "version": "1.0.0",
+  "description": "JavaScript scripts for XION blockchain NFT operations",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "create-wallet": "node scripts/create-wallet.js",
+    "deploy-contract": "node scripts/deploy-contract.js",
+    "mint-token": "node scripts/mint-token.js",
+    "transfer-nft": "node scripts/transfer-nft.js",
+    "check-gas": "node scripts/check-gas-fee.js",
+    "transfer-gas": "node scripts/transfer-gas.js",
+    "verify-ownership": "node scripts/verify-ownership.js",
+    "monitor-tx": "node scripts/monitor-transaction.js",
+    "sign-message": "node scripts/sign-message.js",
+    "sign-tx": "node scripts/sign-transaction.js"
+  },
+  "keywords": [
+    "xion",
+    "blockchain",
+    "nft",
+    "cw721",
+    "cosmwasm",
+    "cosmos"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@cosmjs/stargate": "^0.32.4",
+    "@cosmjs/proto-signing": "^0.32.4",
+    "@cosmjs/encoding": "^0.32.4",
+    "@cosmjs/crypto": "^0.32.4",
+    "dotenv": "^16.4.5"
+  }
+}

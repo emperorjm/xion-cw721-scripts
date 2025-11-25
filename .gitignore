@@ -1,0 +1,48 @@
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local
+
+# Signed transactions (may contain sensitive data)
+signed-tx.json
+*.signed.json
+
+# Signature files
+signature.json
+*.signature.json
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Private keys and wallets (if any are saved)
+*.key
+*.pem
+wallet.json
+keyring-test/
