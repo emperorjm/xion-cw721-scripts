@@ -11,6 +11,8 @@ import {
   getFirstAccount,
   connectSigningClient,
   parseXionAmount,
+  simulateTransaction,
+  calculateFee,
   handleError,
 } from "../utils/helpers.js";
 import XION_CONFIG from "../utils/config.js";
@@ -47,7 +49,7 @@ async function signTransaction() {
     // Build transaction based on type
     switch (TX_TYPE.toLowerCase()) {
       case "send-tokens":
-        const sendRecipient = process.env.RECIPIENT || "xion1qka2er800suxsy7y9yz9wqgt8p3ktw5ptpf28s";
+        const sendRecipient = process.env.RECIPIENT || account.address; // Use own address as default
         const sendAmount = process.env.AMOUNT || "1.0";
         const amountInUxion = parseXionAmount(sendAmount);
 
@@ -67,7 +69,7 @@ async function signTransaction() {
 
       case "mint-nft":
         const mintContract = process.env.CONTRACT_ADDRESS;
-        const tokenId = process.env.TOKEN_ID || "1";
+        const tokenId = process.env.TOKEN_ID || "99999"; // Use high number unlikely to exist
         const tokenUri = process.env.TOKEN_URI || "ipfs://example";
 
         if (!mintContract) {
@@ -80,11 +82,7 @@ async function signTransaction() {
             token_id: tokenId,
             owner: account.address,
             token_uri: tokenUri,
-            extension: {
-              name: `NFT #${tokenId}`,
-              description: "NFT",
-              image: tokenUri,
-            },
+            // Note: Code ID 525 doesn't support extension in mint message
           },
         };
 
@@ -159,8 +157,11 @@ async function signTransaction() {
 
     console.log("\nSigning transaction...");
 
+    // Estimate gas and calculate fee
+    const gasEstimate = await simulateTransaction(client, account.address, messages);
+    const fee = calculateFee(gasEstimate);
+
     // Sign the transaction (but don't broadcast)
-    const fee = await client.calculateFee(account.address, messages, memo);
     const txRaw = await client.sign(account.address, messages, fee, memo);
 
     // Serialize the signed transaction
@@ -267,6 +268,4 @@ export async function broadcastSignedTransaction(signedTxFile) {
 }
 
 // Run the script
-if (import.meta.url === `file://${process.argv[1]}`) {
-  signTransaction();
-}
+signTransaction();
