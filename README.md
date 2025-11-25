@@ -159,20 +159,27 @@ This contract implementation requires `token_uri` for all metadata. The METADATA
 Transfer an NFT to another address.
 
 ```bash
-# Using environment variables
-npm run transfer-nft
+# Using environment variables (set in .env)
+TOKEN_ID=1 RECIPIENT=xion1xyz... npm run transfer-nft
 
-# Using command line arguments
-npm run transfer-nft <token_id> <recipient_address>
+# Using command line arguments (note the -- separator)
+npm run transfer-nft -- <token_id> <recipient_address>
 
-# Example
-npm run transfer-nft 1 xion1xyz...
+# Example with command line args
+npm run transfer-nft -- 1 xion1xyz...
+
+# Example with environment variables
+TOKEN_ID=1 RECIPIENT=xion1xyz... npm run transfer-nft
 ```
+
+**Important:** When using npm scripts, you must use `--` to separate npm options from script arguments.
 
 **Environment Variables:**
 - `CONTRACT_ADDRESS` - NFT contract address (required)
-- `TOKEN_ID` - Token ID to transfer (required)
-- `RECIPIENT` - Recipient address (required)
+- `TOKEN_ID` - Token ID to transfer (optional, can use command line args)
+- `RECIPIENT` - Recipient address (optional, can use command line args)
+
+**Note:** Environment variables take precedence over command line arguments. If TOKEN_ID or RECIPIENT are set in .env, they will override command line args.
 
 **Output:**
 - Transfer confirmation
