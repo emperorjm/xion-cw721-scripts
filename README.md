@@ -101,25 +101,23 @@ npm run deploy-contract
 
 ### 3. Mint Token
 
-Mint a new NFT with metadata. Supports both **on-chain** and **off-chain** (IPFS) metadata storage.
+Mint a new NFT with metadata via token_uri.
+
+**Important:** Code ID 525 (cw721-metadata-onchain) on XION stores all metadata via `token_uri`. The mint message does not support inline extension fields. Metadata must be hosted at an accessible endpoint (IPFS, HTTP, or on-chain storage service).
 
 ```bash
-# Mint with on-chain metadata (default)
-METADATA_STORAGE=onchain npm run mint-token
+# Mint with IPFS metadata URI
+TOKEN_URI=ipfs://QmYourHash npm run mint-token
 
-# Mint with off-chain metadata (IPFS)
-METADATA_STORAGE=offchain TOKEN_URI=ipfs://QmYourHash npm run mint-token
+# Mint with specific token ID
+TOKEN_ID=1 TOKEN_URI=ipfs://QmYourHash npm run mint-token
 
 # Using command line arguments
 npm run mint-token <token_id> <owner_address> <token_uri>
 
-# Example with full on-chain metadata
+# Example
 TOKEN_ID=1 \
-TOKEN_NAME="Epic Dragon" \
-TOKEN_DESCRIPTION="A legendary fire dragon" \
-TOKEN_IMAGE="ipfs://QmImageHash" \
-TOKEN_ATTRIBUTES='[{"trait_type":"Element","value":"Fire"},{"trait_type":"Power","value":95}]' \
-METADATA_STORAGE=onchain \
+TOKEN_URI="ipfs://QmYourMetadataHash" \
 npm run mint-token
 ```
 
@@ -127,31 +125,25 @@ npm run mint-token
 - `CONTRACT_ADDRESS` - NFT contract address (required)
 - `TOKEN_ID` - Unique token ID (optional, default: "1")
 - `OWNER_ADDRESS` - NFT owner (optional, defaults to minter)
-- `METADATA_STORAGE` - "onchain" or "offchain" (optional, default: "onchain")
-- `TOKEN_URI` - Metadata URI for off-chain, or reference for on-chain (optional)
-- `TOKEN_NAME` - NFT name (optional)
-- `TOKEN_DESCRIPTION` - NFT description (optional)
-- `TOKEN_IMAGE` - Image URI (optional)
-- `TOKEN_ATTRIBUTES` - JSON array of attributes (optional, for on-chain)
-- `TOKEN_ANIMATION_URL` - Animation/video URL (optional, for on-chain)
-- `TOKEN_EXTERNAL_URL` - External link (optional, for on-chain)
-- `TOKEN_BACKGROUND_COLOR` - Background color hex (optional, for on-chain)
+- `TOKEN_URI` - Metadata URI pointing to JSON metadata (required)
+- `METADATA_STORAGE` - Display mode: "onchain" or "offchain" (optional, for logging only)
 
-**Metadata Storage Modes:**
+**Metadata Storage:**
+All metadata must be stored at the `TOKEN_URI` location as a JSON file following the CW721 metadata standard
 
-**On-Chain (METADATA_STORAGE=onchain):**
-- All metadata stored directly in the smart contract
-- No dependency on external services (IPFS not required)
-- Guaranteed permanence and availability
-- Higher gas costs for minting
-- Best for: Small collections, critical metadata, text-based NFTs
+**Note on Code ID 525 Behavior:**
 
-**Off-Chain (METADATA_STORAGE=offchain):**
-- Metadata stored on IPFS, contract stores only the reference
-- Lower gas costs for minting
-- Supports large files (images, videos, etc.)
-- Requires IPFS to be accessible
-- Best for: Large collections, media-heavy NFTs, standard use case
+This contract implementation requires `token_uri` for all metadata. The METADATA_STORAGE environment variable is used for logging purposes only. In practice:
+
+- **token_uri** can point to IPFS (ipfs://...), HTTP endpoints, or on-chain storage services
+- All metadata follows the standard CW721 metadata JSON format
+- The contract stores the token_uri reference, not the metadata itself
+- Wallets and apps fetch metadata from the token_uri when displaying NFTs
+
+**Typical Usage:**
+- IPFS: `TOKEN_URI=ipfs://QmYourHash` - Decentralized, permanent storage
+- HTTP: `TOKEN_URI=https://api.example.com/nft/1` - Centralized, dynamic metadata
+- Arweave: `TOKEN_URI=ar://...` - Permanent, decentralized storage
 
 **Output:**
 - Token ID
@@ -653,78 +645,65 @@ pub struct TokenInfo {
 ```
 
 #### CW721-Metadata-Onchain (Code ID: 525 testnet / 28 mainnet)
-Extended implementation that supports storing full metadata directly in the smart contract.
+**IMPORTANT:** Code ID 525 on XION testnet behaves differently than the standard cw721-metadata-onchain implementation.
 
-**How it works:**
-- Can store full metadata on-chain in the `extension` field
-- OR can use token_uri for IPFS like base (flexible)
-- Metadata is guaranteed available without external dependencies
-- Query returns all metadata directly from contract
+**How it actually works (based on testing):**
+- **Does NOT support inline extension in mint messages**
+- Requires `token_uri` for all metadata (similar to base contract)
+- The mint message accepts only: token_id, owner, and token_uri
+- Extension field in mint message causes "Invalid type" errors
 
 **Storage structure:**
 ```rust
 pub struct TokenInfo {
     pub owner: Addr,
     pub approvals: Vec<Approval>,
-    pub token_uri: Option<String>,        // Optional IPFS reference
-    pub extension: Option<Metadata>,      // Full metadata stored here
-}
-
-pub struct Metadata {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub image: Option<String>,
-    pub attributes: Option<Vec<Trait>>,
-    pub animation_url: Option<String>,
-    pub external_url: Option<String>,
-    pub background_color: Option<String>,
-    // ... extensible
+    pub token_uri: Option<String>,        // Required for all metadata
+    pub extension: Option<ExtensionType>, // Not used in mint messages
 }
 ```
 
+**Key Finding:**
+Despite the "metadata-onchain" name, this contract implementation uses token_uri exclusively for metadata storage. The mint message format is identical to CW721-base.
+
 ### Key Differences
 
-| Feature | CW721-Base | CW721-Metadata-Onchain |
-|---------|-----------|------------------------|
-| **Metadata Storage** | Off-chain only (IPFS/HTTP) | On-chain OR off-chain (flexible) |
-| **token_uri Required** | Yes | No (optional) |
-| **Extension Field** | Empty | Full metadata struct |
-| **Minting Gas Cost** | Low (~150k-200k gas) | Higher if storing metadata (~300k-500k gas) |
-| **Query Speed** | Fast (minimal data) | Fast (all data available) |
-| **External Dependencies** | Yes (IPFS must be accessible) | No (if using on-chain) |
-| **Metadata Permanence** | Depends on IPFS pinning | Guaranteed (on blockchain) |
-| **Ideal For** | Standard NFTs, large collections, media-heavy | Critical metadata, small collections, text NFTs |
-| **IPFS Support** | Required | Optional |
-| **Metadata Mutability** | Can update IPFS (new URI) | Immutable once minted (on-chain) |
-| **Marketplace Compatibility** | Universal | Universal (reads extension OR token_uri) |
+**Note:** Based on testing with Code ID 525 on XION testnet, both contracts behave very similarly in terms of mint message format.
 
-### Which Should You Use?
+| Feature | CW721-Base (522) | CW721-Metadata-Onchain (525) |
+|---------|------------------|------------------------------|
+| **Metadata Storage** | Via token_uri (IPFS/HTTP) | Via token_uri (IPFS/HTTP) |
+| **token_uri Required** | Yes | Yes |
+| **Extension in Mint** | Not supported | Not supported (causes errors) |
+| **Minting Gas Cost** | ~146k gas | ~146k gas |
+| **Mint Message Format** | token_id, owner, token_uri | token_id, owner, token_uri |
+| **External Dependencies** | Yes (IPFS must be accessible) | Yes (IPFS must be accessible) |
+| **Practical Difference** | Minimal | Minimal (may support extension queries after mint) |
 
-#### Use **CW721-Base** when:
-- Building a large NFT collection (10k+ items)
-- NFTs have rich media (images, videos, 3D assets)
-- Minimizing gas costs is critical
-- Following industry standard patterns
-- Using established IPFS infrastructure
-- Metadata may need updates (point to new IPFS hash)
+**Conclusion:** For XION Code ID 525, the mint behavior is identical to base contracts. Both require token_uri for metadata.
 
-#### Use **CW721-Metadata-Onchain** when:
-- Metadata must be permanently on-chain (no external dependencies)
-- Building text-based or low-data NFTs (poetry, credentials, certificates)
-- Metadata is critical and can't risk IPFS unavailability
-- Want flexibility to use either on-chain OR IPFS per token
-- Small to medium collections where gas cost is acceptable
-- Building for enterprise/institutional use cases requiring guarantees
+### Which Should You Use on XION?
 
-### Flexibility of Metadata-Onchain
+**Based on our testing:**
 
-The beauty of CW721-metadata-onchain is **flexibility**:
+For XION testnet, both contracts (Code ID 522 and 525) behave almost identically in terms of minting:
+- Both require `token_uri` for metadata
+- Both have similar gas costs (~146k gas)
+- Both depend on external metadata sources (IPFS/HTTP)
 
-```javascript
-// Mint with FULL on-chain metadata (no IPFS needed)
-METADATA_STORAGE=onchain npm run mint-token
+**Recommendation:** Use Code ID 525 (this project's default) since:
+- It's the version this codebase is built for
+- May support additional query features for metadata
+- Future updates might add inline metadata support
+- Maintains compatibility with standard CW721 base behavior
 
-// Mint with off-chain metadata (works exactly like base)
+**Usage:**
+
+```bash
+# All minting requires token_uri
+TOKEN_URI=ipfs://QmYourHash npm run mint-token
+
+# The METADATA_STORAGE variable is for logging only
 METADATA_STORAGE=offchain TOKEN_URI=ipfs://QmHash npm run mint-token
 ```
 

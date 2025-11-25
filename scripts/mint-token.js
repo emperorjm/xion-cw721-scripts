@@ -55,12 +55,14 @@ async function mintToken() {
     // Determine owner (defaults to minter if not specified)
     const ownerAddress = OWNER_ADDRESS || account.address;
 
-    // Prepare extension based on storage mode
-    let extension;
+    // Prepare storage info for display
     let storageInfo;
+    let extension = null; // Store for display purposes only
 
     if (METADATA_STORAGE === "onchain") {
-      // On-chain storage: Store full metadata in extension
+      // Note: This contract (Code ID 525) doesn't support inline extension in mint
+      // Metadata must be stored via token_uri (IPFS or HTTP endpoint)
+      // The "onchain" mode here means token_uri points to on-chain queryable metadata
       extension = {
         name: TOKEN_NAME,
         description: TOKEN_DESCRIPTION,
@@ -87,23 +89,18 @@ async function mintToken() {
         extension.background_color = process.env.TOKEN_BACKGROUND_COLOR;
       }
 
-      storageInfo = "ON-CHAIN (Full metadata stored on blockchain)";
+      storageInfo = "METADATA VIA TOKEN_URI (This contract uses token_uri for all metadata)";
     } else {
-      // Off-chain storage: Metadata stored on IPFS, only reference on-chain
-      extension = {
-        // Store minimal data on-chain for off-chain metadata
-        image: TOKEN_IMAGE, // Optional: can be in IPFS metadata instead
-      };
       storageInfo = "OFF-CHAIN (Metadata stored on IPFS: " + TOKEN_URI + ")";
     }
 
-    // Prepare mint message
+    // Prepare mint message - Code ID 525 doesn't support extension field in mint
+    // All metadata must come from token_uri
     const mintMsg = {
       mint: {
         token_id: TOKEN_ID,
         owner: ownerAddress,
         token_uri: TOKEN_URI,
-        extension: extension,
       },
     };
 

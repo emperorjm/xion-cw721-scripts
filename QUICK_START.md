@@ -39,14 +39,14 @@ CONTRACT_ADDRESS=xion1abc...xyz
 
 ### Step 6: Mint Your First NFT
 ```bash
-# Mint with on-chain metadata (default)
+# Mint with IPFS metadata URI (default)
 npm run mint-token
 
-# Or mint with off-chain metadata (IPFS)
-METADATA_STORAGE=offchain TOKEN_URI=ipfs://QmYourHash npm run mint-token
+# Or with custom token URI
+TOKEN_URI=ipfs://QmYourHash npm run mint-token
 ```
 
-**Note:** This project uses CW721-metadata-onchain (Code ID: 525) which supports storing full metadata on-chain or using IPFS for off-chain storage.
+**Note:** This project uses CW721-metadata-onchain (Code ID: 525). All metadata must be provided via `token_uri` (IPFS, HTTP, or other storage). The contract stores the URI reference.
 
 ### Step 7: Verify Ownership
 ```bash
