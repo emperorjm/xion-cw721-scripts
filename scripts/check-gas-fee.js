@@ -46,14 +46,10 @@ async function checkGasFee() {
         }
         const mintMsg = {
           mint: {
-            token_id: "1",
+            token_id: "99999", // Use high number unlikely to exist
             owner: account.address,
             token_uri: "ipfs://example",
-            extension: {
-              name: "Test NFT",
-              description: "Test",
-              image: "ipfs://example",
-            },
+            // Note: Code ID 525 doesn't support extension in mint message
           },
         };
         messages = [
@@ -77,8 +73,8 @@ async function checkGasFee() {
         }
         const transferNftMsg = {
           transfer_nft: {
-            recipient: "xion1qka2er800suxsy7y9yz9wqgt8p3ktw5ptpf28s", // Example address
-            token_id: "1",
+            recipient: account.address, // Use own address for simulation
+            token_id: "2", // Use token that exists and you own
           },
         };
         messages = [
@@ -96,8 +92,8 @@ async function checkGasFee() {
         break;
 
       case "send-tokens":
-        const amount = process.env.AMOUNT || "1000000"; // 1 XION
-        const recipient = process.env.RECIPIENT || "xion1qka2er800suxsy7y9yz9wqgt8p3ktw5ptpf28s";
+        const amount = process.env.AMOUNT || "1000000"; // 1 XION in uxion
+        const recipient = process.env.RECIPIENT || account.address; // Use own address for simulation
         messages = [
           {
             typeUrl: "/cosmos.bank.v1beta1.MsgSend",
