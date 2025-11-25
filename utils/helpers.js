@@ -3,6 +3,7 @@
  */
 
 import { SigningStargateClient, StargateClient, GasPrice } from "@cosmjs/stargate";
+import { SigningCosmWasmClient, CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { toUtf8 } from "@cosmjs/encoding";
 import dotenv from "dotenv";
@@ -46,21 +47,21 @@ export async function getFirstAccount(wallet) {
 }
 
 /**
- * Connect to XION network (read-only client)
- * @returns {Promise<StargateClient>} Query client
+ * Connect to XION network (read-only client for CosmWasm operations)
+ * @returns {Promise<CosmWasmClient>} Query client
  */
 export async function connectQueryClient() {
-  const client = await StargateClient.connect(XION_CONFIG.rpcEndpoint);
+  const client = await CosmWasmClient.connect(XION_CONFIG.rpcEndpoint);
   return client;
 }
 
 /**
- * Connect to XION network with signing capabilities
+ * Connect to XION network with signing capabilities for CosmWasm operations
  * @param {DirectSecp256k1HdWallet} wallet - Wallet instance
- * @returns {Promise<SigningStargateClient>} Signing client
+ * @returns {Promise<SigningCosmWasmClient>} Signing client
  */
 export async function connectSigningClient(wallet) {
-  const client = await SigningStargateClient.connectWithSigner(
+  const client = await SigningCosmWasmClient.connectWithSigner(
     XION_CONFIG.rpcEndpoint,
     wallet,
     {
@@ -72,20 +73,19 @@ export async function connectSigningClient(wallet) {
 
 /**
  * Query a smart contract
- * @param {StargateClient} client - Query client
+ * @param {CosmWasmClient} client - Query client
  * @param {string} contractAddress - Contract address
  * @param {object} queryMsg - Query message object
  * @returns {Promise<any>} Query result
  */
 export async function queryContract(client, contractAddress, queryMsg) {
-  const queryData = toUtf8(JSON.stringify(queryMsg));
   const result = await client.queryContractSmart(contractAddress, queryMsg);
   return result;
 }
 
 /**
  * Execute a smart contract transaction
- * @param {SigningStargateClient} client - Signing client
+ * @param {SigningCosmWasmClient} client - Signing client
  * @param {string} senderAddress - Sender's address
  * @param {string} contractAddress - Contract address
  * @param {object} executeMsg - Execute message object
@@ -114,7 +114,7 @@ export async function executeContract(
 
 /**
  * Instantiate a smart contract from existing code
- * @param {SigningStargateClient} client - Signing client
+ * @param {SigningCosmWasmClient} client - Signing client
  * @param {string} senderAddress - Sender's address
  * @param {number} codeId - Code ID of deployed contract
  * @param {object} instantiateMsg - Instantiation message
@@ -145,7 +145,7 @@ export async function instantiateContract(
 
 /**
  * Get transaction by hash
- * @param {StargateClient} client - Query client
+ * @param {CosmWasmClient} client - Query client
  * @param {string} txHash - Transaction hash
  * @returns {Promise<object|null>} Transaction data or null if not found
  */
@@ -156,7 +156,7 @@ export async function getTransaction(client, txHash) {
 
 /**
  * Wait for transaction to be indexed
- * @param {StargateClient} client - Query client
+ * @param {CosmWasmClient} client - Query client
  * @param {string} txHash - Transaction hash
  * @param {number} maxAttempts - Maximum number of attempts
  * @param {number} delayMs - Delay between attempts in milliseconds
@@ -200,7 +200,7 @@ export function parseXionAmount(amount) {
 
 /**
  * Get account balance
- * @param {StargateClient} client - Query client
+ * @param {CosmWasmClient} client - Query client
  * @param {string} address - Account address
  * @returns {Promise<object>} Balance information
  */
@@ -211,7 +211,7 @@ export async function getBalance(client, address) {
 
 /**
  * Simulate a transaction to estimate gas
- * @param {SigningStargateClient} client - Signing client
+ * @param {SigningCosmWasmClient} client - Signing client
  * @param {string} senderAddress - Sender's address
  * @param {Array} messages - Array of messages to simulate
  * @returns {Promise<number>} Estimated gas needed

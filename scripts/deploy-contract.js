@@ -72,10 +72,8 @@ async function deployContract() {
       account.address // Set deployer as admin for ownership transfer capability
     );
 
-    // Extract contract address from events
-    const contractAddress = result.logs[0].events
-      .find((e) => e.type === "instantiate")
-      .attributes.find((a) => a.key === "_contract_address").value;
+    // Get contract address from result
+    const contractAddress = result.contractAddress;
 
     console.log("\n" + "=".repeat(80));
     console.log("CONTRACT DEPLOYED SUCCESSFULLY!");
